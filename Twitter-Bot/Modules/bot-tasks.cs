@@ -85,7 +85,6 @@ namespace Twitter_Bot.Modules
 
             if (currentEpisode > 63)
             {
-                await Program.client.Tweets.PublishTweetAsync("Done, now switching back to episode 1.");
                 Console.WriteLine("I finished my very long first round. It's time to back to episode 1.");
                 currentScreen = 0;
                 currentEpisode = 1;
