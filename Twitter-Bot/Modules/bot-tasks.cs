@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
 using System.Threading.Tasks;
-using Tweetinvi;
 using Tweetinvi.Parameters;
 using Tweetinvi.Models;
 using System.Linq;
+using System.Text.Json;
 
 namespace Twitter_Bot.Modules
 {
@@ -16,6 +15,7 @@ namespace Twitter_Bot.Modules
         public static int currentEpisode = 62;
         public static int currentScreen = 0;
         public static List<string> screenList = new List<string>();
+
 
         public static async Task updateScreenList()
         {
@@ -90,6 +90,15 @@ namespace Twitter_Bot.Modules
                 currentEpisode = 1;
                 await updateScreenList();
             }
+
+            Program.backupProgress.Clear();
+            Program.backupProgress.Add(currentEpisode);
+            Program.backupProgress.Add(currentScreen);
+
+
+           var json = JsonSerializer.Serialize(Program.backupProgress);
+            File.WriteAllText("Backup.json", json + Environment.NewLine);
+            Console.WriteLine("Updated json file with the current screenshot and episode.");
 
             await Task.CompletedTask;
         }

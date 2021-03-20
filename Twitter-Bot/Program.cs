@@ -1,10 +1,9 @@
 ﻿using System;
 using Tweetinvi;
-using Tweetinvi.Models;
 using System.Threading.Tasks;
 using System.IO;
-using Tweetinvi.Parameters;
-using System.Linq;
+using System.Text.Json;
+using System.Collections.Generic;
 
 namespace Twitter_Bot
 {
@@ -12,6 +11,7 @@ namespace Twitter_Bot
     {
         public static TwitterClient client;
         private static int connectionFailCount = 0;
+        public static List<int> backupProgress = new List<int>();
 
         string[] tokens;
 
@@ -40,7 +40,7 @@ namespace Twitter_Bot
             client = new TwitterClient(tokens[0], tokens[1], tokens[2], tokens[3]);
 
             Console.WriteLine("Connected!");
-
+            await executecopyJson(); //get savefile if it exists
             await Twitter_Bot.Modules.BotExecTask.updateScreenList();
 
 
@@ -53,14 +53,6 @@ namespace Twitter_Bot
             timer.Elapsed += CheckSendTweet_Loop;
             timer.Start();
 
-            /*byte[] tweetinviLogoBinary = File.ReadAllBytes("Episode62/vlcsnap-2020-09-01-11h48m01s983.png");
-
-            IMedia uploadedImage = await  client.Upload.UploadTweetImageAsync(tweetinviLogoBinary);
-            ITweet tweetWithImage = await client.Tweets.PublishTweetAsync(new PublishTweetParameters() { Medias = { uploadedImage } });
-
-            //var tweet = await userClient.Tweets.PublishTweetAsync("Hello World :)");
-            Console.WriteLine("You published the tweet ^^");*/
-
             await Task.Delay(-1);
         }
 
@@ -68,15 +60,15 @@ namespace Twitter_Bot
         {
             var date = DateTime.Now;
 
-            if (date.Minute % 10 == 0 || date.Minute % 10 == 5 || connectionFailCount > 0 && connectionFailCount < 4) //we try again 3 times if the connection failed (one try every minute.)
+            /*if (date.Minute % 10 == 0 || date.Minute % 10 == 5 || connectionFailCount > 0 && connectionFailCount < 4) //we try again 3 times if the connection failed (one try every minute.)
             {
-                await isConnectionAllowed(); 
+                await isConnectionAllowed();*/ 
 
                 if (connectionFailCount > 0) //We don't want to try to send the tweet if the connection failed.
                     return;
 
                 await Twitter_Bot.Modules.BotExecTask.SendImageTweet();
-            }
+            //}
         }
 
 
@@ -106,6 +98,26 @@ namespace Twitter_Bot
                 Console.WriteLine(e.ToString());
                 connectionFailCount++;
                 return;
+            }
+        }
+
+
+        private async Task executecopyJson()
+        {
+            try
+            {
+                backupProgress = JsonSerializer.Deserialize<List<int>>(File.ReadAllText("Backup.json"));
+                Console.WriteLine("JSON file detected");
+                Twitter_Bot.Modules.BotExecTask.currentEpisode = backupProgress[0];
+                Twitter_Bot.Modules.BotExecTask.currentScreen = backupProgress[1];
+                Console.WriteLine("Resuming to episode " + Twitter_Bot.Modules.BotExecTask.currentEpisode);
+                Console.WriteLine("Starting from screenshot " + Twitter_Bot.Modules.BotExecTask.currentScreen);
+                await Task.CompletedTask;
+            }
+            catch
+            {
+                Console.WriteLine("No JSON file detected, starting over from Episode 1.");
+                await Task.CompletedTask;
             }
         }
 
