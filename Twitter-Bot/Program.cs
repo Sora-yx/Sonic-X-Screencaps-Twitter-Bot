@@ -41,6 +41,7 @@ namespace Twitter_Bot
 
             await Twitter_Bot.Modules.BotExecTask.updateScreenList();
 
+
             System.Timers.Timer timer = new System.Timers.Timer()
             {
                 AutoReset = true,
@@ -63,10 +64,11 @@ namespace Twitter_Bot
 
         private static async void CheckSendTweet_Loop(object sender, System.Timers.ElapsedEventArgs e)
         {
-            var date = DateTime.Now;
+            //var date = DateTime.Now;
 
-            if (date.Minute % 10 == 0 || date.Minute % 10 == 5)
-                await Twitter_Bot.Modules.BotExecTask.SendImageTweet();
+            //if (date.Minute % 10 == 0 || date.Minute % 10 == 5)
+
+            await Twitter_Bot.Modules.BotExecTask.SendImageTweet();
         }
 
     }

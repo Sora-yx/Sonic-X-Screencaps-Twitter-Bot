@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Threading.Tasks;
-
 using Tweetinvi;
 using Tweetinvi.Parameters;
 using Tweetinvi.Models;
@@ -20,12 +19,22 @@ namespace Twitter_Bot.Modules
 
         public static async Task updateScreenList()
         {
-            screenList.Clear();
-            String screenName = "episode" + currentEpisode.ToString() + "\\";
+            String screenName = "episode" + currentEpisode.ToString();
 
-            foreach (string f in Directory.GetFiles(screenName, "*.*"))
+            if (Directory.Exists(screenName))
             {
-                screenList.Add(f);
+                screenList.Clear();
+                screenName += "\\";
+
+                foreach (string f in Directory.GetFiles(screenName, "*.*"))
+                {
+                    screenList.Add(f);
+                }
+            }
+            else
+            {
+                Console.WriteLine("Fatal Error, I couldn't get the screencap in the folder. I tried Episode " + currentEpisode + " and screencap number " + currentScreen);
+                return;
             }
 
             await Task.CompletedTask;
@@ -41,10 +50,24 @@ namespace Twitter_Bot.Modules
         {
             await updateScreenCount();
 
+            if (screenCount <= 0)
+            {
+                Console.WriteLine("Fatal Error, I couldn't get the screencap in the folder. I tried Episode " + currentEpisode + " and screencap number " + currentScreen);
+                return;
+            }
+
             byte[] tweetinviLogoBinary = File.ReadAllBytes(getCurrentScreenName()); //"episode" + currentEpisode.ToString() + "\\" + screenList[currentScreen].ToString() + ".png");
 
-            IMedia uploadedImage = await Program.client.Upload.UploadTweetImageAsync(tweetinviLogoBinary);
-            ITweet tweetWithImage = await Program.client.Tweets.PublishTweetAsync(new PublishTweetParameters() { Medias = { uploadedImage } });
+            if (tweetinviLogoBinary != null)
+            {
+                IMedia uploadedImage = await Program.client.Upload.UploadTweetImageAsync(tweetinviLogoBinary);
+                ITweet tweetWithImage = await Program.client.Tweets.PublishTweetAsync(new PublishTweetParameters() { Medias = { uploadedImage } });
+            }
+            else
+            {
+                Console.WriteLine("Fatal Error, I couldn't get the screencap in the folder. I was on Episode " + currentEpisode + " and screencap number " + currentScreen);
+                return;
+            }
 
             //var tweet = await userClient.Tweets.PublishTweetAsync("Hello World :)");
             Console.WriteLine("Send screen " + currentScreen + " from episode " + currentEpisode);
@@ -53,22 +76,40 @@ namespace Twitter_Bot.Modules
 
             if (currentScreen > screenCount)
             {
+                Console.WriteLine("I finished episode " + currentEpisode + " Moving to next episode...");
                 currentEpisode++;
+                if (currentEpisode < 64)
+                    await updateScreenList();
                 currentScreen = 0;
             }
 
-            if (currentEpisode > 78)
+            if (currentEpisode > 63)
+            {
+                await Program.client.Tweets.PublishTweetAsync("Done, now switching back to episode 1.");
+                Console.WriteLine("I finished my very long first round. It's time to back to episode 1.");
+                currentScreen = 0;
                 currentEpisode = 1;
+                await updateScreenList();
+            }
 
             await Task.CompletedTask;
         }
 
         public static async Task updateScreenCount()
         {
-            screenCount = (from file in Directory.EnumerateFiles(@"Episode" + currentEpisode.ToString() + "\\ ", "*.png", SearchOption.AllDirectories)
-                           select file).Count();
+            string folder = "Episode" + currentEpisode.ToString();
 
-            Console.WriteLine("New screen count is " + screenCount + " From episode " + currentEpisode);
+            if (Directory.Exists(folder))
+            {
+                screenCount = (from file in Directory.EnumerateFiles(@"Episode" + currentEpisode.ToString() + "\\ ", "*.png", SearchOption.AllDirectories)
+                               select file).Count() - 1;
+                Console.WriteLine("New screen count is " + screenCount + " From episode " + currentEpisode);
+            }
+            else
+            {
+                Console.WriteLine("Couldn't get the repertory from episode " + currentEpisode);
+            }
+
             await Task.CompletedTask;
         }
     }
