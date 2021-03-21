@@ -43,7 +43,6 @@ namespace Twitter_Bot
             await executecopyJson(); //get savefile if it exists
             await Twitter_Bot.Modules.BotExecTask.updateScreenList();
 
-
             System.Timers.Timer timer = new System.Timers.Timer()
             {
                 AutoReset = true,
@@ -60,15 +59,16 @@ namespace Twitter_Bot
         {
             var date = DateTime.Now;
 
-            /*if (date.Minute % 10 == 0 || date.Minute % 10 == 5 || connectionFailCount > 0 && connectionFailCount < 4) //we try again 3 times if the connection failed (one try every minute.)
+            //send screenshot every 30 min.
+            if (date.Minute == 0 || date.Minute == 30 || connectionFailCount > 0 && connectionFailCount < 4) //we try again 3 times if the connection failed (one try every minute.)
             {
-                await isConnectionAllowed();*/ 
+                await isConnectionAllowed();
 
                 if (connectionFailCount > 0) //We don't want to try to send the tweet if the connection failed.
                     return;
 
                 await Twitter_Bot.Modules.BotExecTask.SendImageTweet();
-            //}
+            }
         }
 
 
@@ -100,7 +100,6 @@ namespace Twitter_Bot
                 return;
             }
         }
-
 
         private async Task executecopyJson()
         {

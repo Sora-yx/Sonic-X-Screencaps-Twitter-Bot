@@ -12,24 +12,27 @@ namespace Twitter_Bot.Modules
     public static class BotExecTask
     {
         public static int screenCount;
-        public static int currentEpisode = 62;
+        public static int currentEpisode = 1;
         public static int currentScreen = 0;
         public static List<string> screenList = new List<string>();
 
 
         public static async Task updateScreenList()
         {
-            String screenName = "episode" + currentEpisode.ToString();
+            String screenName = "Episode" + currentEpisode.ToString();
 
             if (Directory.Exists(screenName))
             {
                 screenList.Clear();
-                screenName += "\\";
+                screenName += "/";
 
                 foreach (string f in Directory.GetFiles(screenName, "*.*"))
                 {
                     screenList.Add(f);
                 }
+
+                screenList.Sort();
+
             }
             else
             {
@@ -78,14 +81,14 @@ namespace Twitter_Bot.Modules
             {
                 Console.WriteLine("I finished episode " + currentEpisode + " Moving to next episode...");
                 currentEpisode++;
-                if (currentEpisode < 64)
+                if (currentEpisode >= 1 && currentEpisode <= 78)
                     await updateScreenList();
                 currentScreen = 0;
             }
 
-            if (currentEpisode > 63)
+            if (currentEpisode > 78)
             {
-                Console.WriteLine("I finished my very long first round. It's time to back to episode 1.");
+                Console.WriteLine("I finished my very long round. It's time to go back to episode 1.");
                 currentScreen = 0;
                 currentEpisode = 1;
                 await updateScreenList();
@@ -109,7 +112,7 @@ namespace Twitter_Bot.Modules
 
             if (Directory.Exists(folder))
             {
-                screenCount = (from file in Directory.EnumerateFiles(@"Episode" + currentEpisode.ToString() + "\\ ", "*.png", SearchOption.AllDirectories)
+                screenCount = (from file in Directory.EnumerateFiles(@"Episode" + currentEpisode.ToString() + "/", "*.png", SearchOption.AllDirectories)
                                select file).Count() - 1;
                 Console.WriteLine("New screen count is " + screenCount + " From episode " + currentEpisode);
             }
